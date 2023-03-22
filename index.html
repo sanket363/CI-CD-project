@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>To-Do List</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+	<?php include 'insert.php';?>
+	<div class="container">
+		<h1>To-Do List</h1>
+		<form>
+			<label for="task-input">Add a new task:</label>
+			<input type="text" id="task-input" name="task" placeholder="Enter task...">
+			<label for="category-select">Select category:</label>
+			<select id="category-select" name="category">
+				<option value="none">None</option>
+				<option value="work">Work</option>
+				<option value="personal">Personal</option>
+				<option value="grocery">Grocery</option>
+			</select>
+			<button type="submit" class="add-task-button">Add</button>
+		</form>
+		<ul></ul>
+	</div>
+
+	
+
+	<script>
+		const form = document.querySelector('form');
+		const input = document.querySelector('#task-input');
+		const select = document.querySelector('#category-select');
+		const list = document.querySelector('ul');
+		let tasks = [];
+
+		form.addEventListener('submit', function(e) {
+			e.preventDefault();
+			if (input.value) {
+				const task = {
+					id: Date.now(),
+					name: input.value,
+					category: select.value,
+					completed: false
+				};
+				tasks.push(task);
+				displayTask(task);
+				input.value = '';
+			}
+		});
+
+		function displayTask(task) {
+			const item = document.createElement('li');
+			item.dataset.id = task.id;
+			item.innerHTML = `
+				<input type="checkbox" id="checkbox-${task.id}" ${task.completed ? 'checked' : ''}>
+				<label for="checkbox-${task.id}" class="${task.completed ? 'completed' : ''}">${task.name}</label>
+				<button class="edit-button">Edit</button>
+				<button class="delete-button">Delete</button>
+			`;
+			list.appendChild(item);
+			item.querySelector('.edit-button').addEventListener('click', editTask);
+			item.querySelector('.delete-button').addEventListener('click', deleteTask);
+		}
+
+		function editTask(e) {
+			const item = e.target.parentElement;
+			const label = item.querySelector('label');
+			const input = document.createElement('input');
+			input.type = 'text';
+			input.value = label.textContent;
+			input.dataset.value = label.textContent;
+			label.replaceWith(input);
+			input.focus();
+			input.addEventListener('blur', saveTask);
+			input.addEventListener('keydown', function(e)
+            {
+if (e.key === 'Enter') {
+saveTask(e);
+} else if (e.key === 'Escape') {
+cancelEdit(input);
+}
+});
+}
+function saveTask(e) {
+		const input = e.target;
+		const value = input.value.trim();
+		if (value) {
+			const item = input.parentElement;
+			const label = document.createElement('label');
+			label.htmlFor = input.previousSibling.htmlFor;
+			label.textContent = value;
+			input.replaceWith(label);
+			const task = tasks.find(t => t.id === +item.dataset.id);
+			task.name = value;
+		} else {
+			cancelEdit(input);
+		}
+	}
+
+	function cancelEdit(input) {
+		const item = input.parentElement;
+		const label = document.createElement('label');
+		label.htmlFor = input.previousSibling.htmlFor;
+		label.textContent = input.dataset.value;
+		input.replaceWith(label);
+	}
+
+	function deleteTask(e) {
+		const item = e.target.parentElement;
+		const taskId = +item.dataset.id;
+		tasks = tasks.filter(task => task.id !== taskId);
+		item.remove();
+	}
+</script>
+</body>
+</html>
